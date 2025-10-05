@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nasa Exoplanet - Model Tuning</title>
+
+    <link rel="icon" href="{{ url_for('static', filename='exoplanet.png') }}" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: url('{{ url_for("static", filename="heic1312d.png") }}') no-repeat center center fixed;
+            background-size: cover;
+            color: #e6e6e6;
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+        }
+
+        nav {
+            background: rgba(17, 17, 51, 0.85);
+            padding: 15px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        nav a,
+        .nav-link {
+            color: #e6e6e6;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        nav a:hover,
+        .nav-link:hover {
+            color: #00d4ff;
+        }
+
+        .container-section {
+            background-color: #1b1b2f;
+            border-radius: 10px;
+            padding: 20px 25px;
+            margin: 60px auto 40px auto;
+            max-width: 700px;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.1);
+        }
+
+        .container-section:hover {
+            transform: scale(1.01);
+        }
+
+        .form-label {
+            color: #00d4ff;
+            font-weight: 500;
+        }
+
+        input.form-control:focus,
+        select.form-select:focus {
+            border-color: #00d4ff;
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.4);
+        }
+
+        h5 {
+            color: #00d4ff;
+        }
+
+        .plot-card {
+            background-color: rgba(17, 17, 51, 0.85);
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        button.btn-info:hover {
+            background-color: #00d4ff;
+            color: #111133;
+            transform: scale(1.05);
+            transition: all 0.3s;
+        }
+
+        .card {
+            background-color: rgba(17, 17, 51, 0.85);
+            color: #00d4ff;
+            transition: transform 0.3s, opacity 0.5s;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .card.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand text-info fw-bold" href="#">Hunting for Exoplanets with AI</a>
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a href="/" class="nav-link text-light">Home</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container mt-4">
+    {{ dataset_links|safe }}
+</div>
+
+
+    <!-- Model Selection -->
+    <section class="container">
+        <div class="container-section">
+            <h3 class="text-info mb-4">⚙️ Model Selection & Parameter Tuning</h3>
+
+            <form method="POST" action="/train" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="modelSelect" class="form-label">Select Model</label>
+                    <select id="modelSelect" name="model" class="form-select">
+                        <option value="randomforest">Random Forest</option>
+                        <option value="xgboost">XGBoost</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label for="Upload_csv" class="form-label text-info fw-semibold">📂 Upload Your Dataset</label>
+                    <input type="file" name="Upload_csv" id="Upload_csv"
+                        class="form-control bg-dark text-light border-info" accept=".csv" required>
+                    <small class="text-secondary">Please upload a valid CSV file containing exoplanet data.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="datasetType" class="form-label">Select Dataset Type</label>
+                    <select id="datasetType" name="data_set" class="form-select">
+                        <option value="k2">K2</option>
+                        <option value="kepler">Kepler</option>
+                        <option value="tess">Tess</option>
+                    </select>
+                </div>
+
+                <!-- Random Forest Parameters -->
+                <div id="rfParams" style="display: none;">
+                    <h5 class="mt-4">🌲 Random Forest Parameters</h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">n_estimators</label>
+                            <input type="number" name="n_estimators" class="form-control" placeholder="100">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">max_depth</label>
+                            <input type="number" name="max_depth" class="form-control" placeholder="None">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">min_samples_split</label>
+                            <input type="number" name="min_samples_split" class="form-control" placeholder="2">
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-3">
+                        <div class="col-md-4">
+                            <label class="form-label">min_samples_leaf</label>
+                            <input type="number" name="min_samples_leaf" class="form-control" placeholder="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">max_features</label>
+                            <input type="text" name="max_features" class="form-control" placeholder="sqrt / log2 / None">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- XGBoost Parameters -->
+                <div id="xgbParams" style="display: none;">
+                    <h5 class="mt-4">🚀 XGBoost Parameters</h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">n_estimators</label>
+                            <input type="number" name="xgb_n_estimators" class="form-control" placeholder="200">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">learning_rate</label>
+                            <input type="number" step="0.01" name="learning_rate" class="form-control" placeholder="0.1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">max_depth</label>
+                            <input type="number" name="xgb_max_depth" class="form-control" placeholder="6">
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-3">
+                        <div class="col-md-4">
+                            <label class="form-label">subsample</label>
+                            <input type="number" step="0.1" name="subsample" class="form-control" placeholder="0.8">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">colsample_bytree</label>
+                            <input type="number" step="0.1" name="colsample_bytree" class="form-control" placeholder="0.8">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">gamma</label>
+                            <input type="number" step="0.1" name="gamma" class="form-control" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-3">
+                        <div class="col-md-4">
+                            <label class="form-label">reg_lambda (L2)</label>
+                            <input type="number" step="0.1" name="reg_lambda" class="form-control" placeholder="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">reg_alpha (L1)</label>
+                            <input type="number" step="0.1" name="reg_alpha" class="form-control" placeholder="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">scale_pos_weight</label>
+                            <input type="number" step="0.1" name="scale_pos_weight" class="form-control" placeholder="1">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-info mt-4 w-100">Build Model and Get Prediction</button>
+            </form>
+        </div>
+    </section>
+{% if accuracy and report %}
+            <div class="container mt-5">
+                <h2 class="mb-4 text-info">Model Evaluation</h2>
+
+                <div class="card mb-4 show">
+                    <div class="card-body">
+                        <h5 class="card-title">Accuracy</h5>
+                        <p class="card-text fs-4">{{ accuracy }}</p>
+                    </div>
+                </div>
+
+                <div class="card show">
+                    <div class="card-body">
+                        <h5 class="card-title">Classification Report</h5>
+                        <pre>{{ report }}</pre>
+                    </div>
+                </div>
+
+                <a href="/" class="btn btn-primary mt-4">Go Back</a>
+            </div>
+            {% endif %}
+<!-- Prediction Counts Chart -->
+{% if plots %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-info text-center">📊 Dataset Plots</h2>
+    <div class="row g-4">
+        {% for plot_name, plot_data in plots.items() %}
+        <div class="col-12 col-md-6">
+            <div class="plot-card p-3" style="background-color: #1b1b2f; border-radius: 10px;">
+                <h5 class="text-info text-center">{{ plot_name|replace('_', ' ')|capitalize }} Plot</h5>
+                <div class="chart-wrapper" style="position: relative; height: 300px; width: 100%;">
+                    <canvas id="{{ plot_name }}Chart"></canvas>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const plotsData = {{ plots|tojson }};
+    Object.keys(plotsData).forEach(plotName => {
+        const ctx = document.getElementById(plotName + "Chart").getContext('2d');
+        const data = plotsData[plotName];
+        new Chart(ctx, {
+            type: data.type,
+            data: {
+                labels: data.labels,
+                datasets: data.datasets
+            },
+            options: {
+                ...data.options,
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    });
+</script>
+{% endif %}
+
+{% if prediction_rows is defined and prediction_rows %}
+<div class="container mt-5">
+    <h3 class="text-info">📋 Predictions Table</h3>
+    <div class="table-responsive">
+        <table class="table table-bordered table-dark text-light">
+            <thead>
+                <tr>
+                    {% for col in table_columns %}
+                        <th>{{ col.replace('_', ' ')|capitalize }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in prediction_rows %}
+                <tr>
+                    {% for col in table_columns %}
+                        <td>{{ row[col] }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+
+{% if ai_report %}
+<div class="container mt-4">
+    <h3 class="text-info">🤖 Report</h3>
+    <div style="background-color: rgba(17,17,51,0.85); 
+                padding: 15px; 
+                border-radius: 8px; 
+                white-space: pre-wrap; 
+                color: #00d4ff;
+                font-family: 'Courier New', monospace;">
+        {{ ai_report }}
+    </div>
+</div>
+{% endif %}
+
+
+
+
+    <footer class="text-center mt-5 mb-3">
+        <p>© 2025 NASA Exoplanet AI</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const modelSelect = document.getElementById('modelSelect');
+        const rfParams = document.getElementById('rfParams');
+        const xgbParams = document.getElementById('xgbParams');
+
+        modelSelect.addEventListener('change', () => {
+            rfParams.style.display = modelSelect.value === 'randomforest' ? 'block' : 'none';
+            xgbParams.style.display = modelSelect.value === 'xgboost' ? 'block' : 'none';
+        });
+
+        // Show default (Random Forest)
+        rfParams.style.display = 'block';
+    </script>
+</body>
+
+</html>
