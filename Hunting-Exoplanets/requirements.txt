@@ -4,5 +4,8 @@ Jinja2==3.1.5
 itsdangerous==2.2.0
 click==8.1.8
 joblib==1.4.2
-pandas==2.2.3        
-numpy==2.1.2        
+pandas==2.2.3
+numpy==2.1.2
+scikit-learn==1.5.2
+python-dotenv==1.1.1
+google-generativeai==0.8.5
