@@ -98,3 +98,4 @@ To simplify the exploration and discovery of exoplanets by leveraging:
 > “The data aligns closely with known exoplanets in the Kepler catalog. Based on model confidence (92%), this is likely a confirmed planet.”
 
 ---
+"note : modal has missing Toi.pkl file "
