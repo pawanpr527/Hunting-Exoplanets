@@ -11,24 +11,18 @@ from model.toi import TessExoplanetClassifier
 from model.koi import KOIClassifier
 from sklearn.metrics import confusion_matrix
 
-# -----------------------------
-# Load environment variables
-# -----------------------------
+
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=api_key)
 
-# -----------------------------
-# Flask app config
-# -----------------------------
+
 app = Flask(__name__)
 UPLOAD_FOLDER = "dataset"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# -----------------------------
-# Load saved models
-# -----------------------------
+
 k2_data = joblib.load("created_model/k2_model.pkl")
 koi_data = joblib.load("created_model/koi_model.pkl")
 toi_data = joblib.load("created_model/toi_model.pkl")
@@ -53,9 +47,6 @@ features_dict = {
 
 disposition_map = {0: "FALSE POSITIVE", 1: "CONFIRMED", 2: "CANDIDATE"}
 
-# -----------------------------
-# Helper functions
-# -----------------------------
 def generate_ai_explanation(dataset_type, input_data, predicted_class):
     prompt = f"""
     You are an AI scientist explaining exoplanet predictions in simple language.
@@ -135,14 +126,10 @@ def generate_plots(y_true, y_pred, feature_importances=None, feature_names=None)
         "feature_importance": feature_plot
     }
 
-# -----------------------------
-# Path to dataset folder
-# -----------------------------
+
 DATASET_FOLDER = "/Users/govindprajapati/Hunting-Exoplanets/dataset"
 
-# -----------------------------
-# Helper: Dataset download links
-# -----------------------------
+
 def generate_dataset_html(files, button_color="#28a745"):
     if not files:
         return "<p>⚠️ No dataset found.</p>"
@@ -168,10 +155,6 @@ def get_dataset_links():
 
 
 
-
-# -----------------------------
-# Routes
-# -----------------------------
 @app.route("/", methods=["GET", "POST"])
 def home():
     dataset_links_html = get_dataset_links()
@@ -288,9 +271,7 @@ def train():
     except Exception as e:
         return render_template("index.html", error=f"⚠️ Training failed: {str(e)}", dataset_links=get_dataset_links())
 
-# -----------------------------
-# Dataset download routes
-# -----------------------------
+
 
 @app.route("/download_dataset/<filename>", methods=["GET"])
 def download_dataset(filename):
@@ -305,11 +286,8 @@ def list_datasets():
         return f"❌ Dataset directory not found: {DATASET_FOLDER}"
     
     files = [f for f in os.listdir(DATASET_FOLDER) if f.endswith(".csv")]
-    return generate_dataset_html(files, button_color="#007bff")  # blue buttons for page
+    return generate_dataset_html(files, button_color="#007bff")
 
 
-# -----------------------------
-# Run Flask App
-# -----------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
